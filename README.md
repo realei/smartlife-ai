@@ -77,3 +77,11 @@ We also expose port 8080 with the `-p 8080:8080` option.
 ```shell
 docker run -e OPENAI_API_KEY=$OPENAI_API_KEY -p 8080:8080 my-langserve-app
 ```
+
+### Questions:
+
+* Why langchain dont support latest version pydantic?  `pip install pydantic==1.10.13`
+
+  ```
+  Using pydantic 2.6.4. OpenAPI docs for invoke, batch, stream, stream_log endpoints will not be generated. API endpoints and playground should work as expected. If you need to see the docs, you can downgrade to pydantic 1. For example, pip install pydantic==1.10.13See https://github.com/tiangolo/fastapi/issues/10360 for details.
+  ```
