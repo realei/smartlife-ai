@@ -25,7 +25,7 @@ def shoppingAgent(model:str = "gpt-3.5-turbo-1106", prompt = prompts.prompt_assi
     os.environ['OPENAI_API_KEY'] = os.environ['OPENAI_API_KEY']
     os.environ["GPLACES_API_KEY"] = os.environ["GMAP_API_KEY"]
 
-    chat = ChatOpenAI(model=model)
+    chat = ChatOpenAI(model=model, streaming=True)
     places_tool = GooglePlacesTool()
     tools = [places_tool]
 
