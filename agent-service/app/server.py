@@ -1,9 +1,16 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security.utils import get_authorization_scheme_param
 from fastapi.middleware.cors import CORSMiddleware
 # from fastapi.responses import RedirectResponse
 from langchain.prompts import ChatPromptTemplate
+from langchain.chat_models import ChatOpenAI
 from langserve import add_routes
+from jose import JWTError, jwt
+import os
+
 from .agent import shoppingAgent
+
 
 
 app = FastAPI(
@@ -22,6 +29,26 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
+@app.middleware("http")
+async def verify_jwt(request: Request, call_next):
+    credentials_exception = HTTPException(
+        status_code=401, 
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    authorization: str = request.headers.get("Authorization")
+    scheme, param = get_authorization_scheme_param(authorization)
+    if authorization is None or scheme.lower() != "bearer":
+        raise credentials_exception
+    try:
+        unverified_header = jwt.get_unverified_header(param)
+        alg = unverified_header['alg']
+        jwt.decode(param, os.getenv('AUTH_SECRET'), algorithms=[alg])
+    except JWTError:
+        raise credentials_exception
+    return await call_next(request)
+
+
 # @app.get("/")
 # async def redirect_root_to_docs():
 #     return RedirectResponse("/docs")
@@ -29,6 +56,12 @@ app.add_middleware(
 
 # # Edit this to add the chain you want to add
 # add_routes(app, NotImplemented)
+
+add_routes(
+    app,
+    ChatOpenAI(),
+    path="/openai",
+)
 
 agent = shoppingAgent()
 
@@ -38,13 +71,13 @@ add_routes(
     path="/agent",
 )
 
-# model = chat = ChatOpenAI(model="gpt-3.5-turbo-1106")
-# prompt = ChatPromptTemplate.from_template("tell me a joke about {topic}")
-# add_routes(
-#     app,
-#     prompt | model,
-#     path="/joke",
-# )
+model = ChatOpenAI(model="gpt-3.5-turbo-1106")
+prompt = ChatPromptTemplate.from_template("tell me a joke about {topic}")
+add_routes(
+    app,
+    prompt | model,
+    path="/joke",
+)
 
 if __name__ == "__main__":
     import uvicorn
