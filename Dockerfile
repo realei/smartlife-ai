@@ -16,6 +16,10 @@ COPY ./app ./app
 
 RUN poetry install --no-interaction --no-ansi
 
+# Set the default value for PORT
+ENV PORT=8080
+
+# Expose the default port
 EXPOSE 8080
 
-CMD exec uvicorn app.server:app --host 0.0.0.0 --port 8080
+CMD exec uvicorn app.server:app --host 0.0.0.0 --port $PORT
