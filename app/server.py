@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.security.utils import get_authorization_scheme_param
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,8 +31,12 @@ app.add_middleware(
 
 @app.middleware("http")
 async def verify_jwt(request: Request, call_next):
+    # Skip the middleware for the /docs and /openapi.json endpoints
+    if request.url.path in ["/docs", "/openapi.json", "/redoc"]:
+        return await call_next(request)
+
     credentials_exception = HTTPException(
-        status_code=401, 
+        status_code=status.HTTP_401_UNAUTHORIZED, 
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
@@ -44,7 +48,7 @@ async def verify_jwt(request: Request, call_next):
         unverified_header = jwt.get_unverified_header(param)
         alg = unverified_header['alg']
         jwt.decode(param, os.getenv('AUTH_SECRET'), algorithms=[alg])
-    except JWTError:
+    except (JWTError, Exception):
         raise credentials_exception
     return await call_next(request)
 
