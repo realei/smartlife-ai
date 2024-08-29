@@ -29,28 +29,28 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
-@app.middleware("http")
-async def verify_jwt(request: Request, call_next):
-    # Skip the middleware for the /docs and /openapi.json endpoints
-    if request.url.path in ["/docs", "/openapi.json", "/redoc"]:
-        return await call_next(request)
+# @app.middleware("http")
+# async def verify_jwt(request: Request, call_next):
+#     # Skip the middleware for the /docs and /openapi.json endpoints
+#     if request.url.path in ["/docs", "/openapi.json", "/redoc"]:
+#         return await call_next(request)
 
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED, 
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    authorization: str = request.headers.get("Authorization")
-    scheme, param = get_authorization_scheme_param(authorization)
-    if authorization is None or scheme.lower() != "bearer":
-        raise credentials_exception
-    try:
-        unverified_header = jwt.get_unverified_header(param)
-        alg = unverified_header['alg']
-        jwt.decode(param, os.getenv('AUTH_SECRET'), algorithms=[alg])
-    except (JWTError, Exception):
-        raise credentials_exception
-    return await call_next(request)
+#     credentials_exception = HTTPException(
+#         status_code=status.HTTP_401_UNAUTHORIZED, 
+#         detail="Could not validate credentials",
+#         headers={"WWW-Authenticate": "Bearer"},
+#     )
+#     authorization: str = request.headers.get("Authorization")
+#     scheme, param = get_authorization_scheme_param(authorization)
+#     if authorization is None or scheme.lower() != "bearer":
+#         raise credentials_exception
+#     try:
+#         unverified_header = jwt.get_unverified_header(param)
+#         alg = unverified_header['alg']
+#         jwt.decode(param, os.getenv('AUTH_SECRET'), algorithms=[alg])
+#     except (JWTError, Exception):
+#         raise credentials_exception
+#     return await call_next(request)
 
 
 # @app.get("/")
